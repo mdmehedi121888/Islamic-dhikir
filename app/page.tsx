@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback, useEffect, useRef } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 type DhikrMode = {
@@ -17,28 +17,28 @@ const DHIKR_MODES: DhikrMode[] = [
     name: "সুবহানাল্লাহ",
     arabic: "سُبْحَانَ اللَّهِ",
     bangla: "আল্লাহ পবিত্র",
-    cycle: 33,
+    cycle: 100,
   },
   {
     id: "alhamdulillah",
     name: "আলহামদুলিল্লাহ",
     arabic: "الْحَمْدُ لِلَّهِ",
     bangla: "সকল প্রশংসা আল্লাহর",
-    cycle: 33,
+    cycle: 100,
   },
   {
     id: "allahuakbar",
     name: "আল্লাহু আকবার",
     arabic: "اللَّهُ أَكْبَرُ",
     bangla: "আল্লাহ মহান",
-    cycle: 33,
+    cycle: 100,
   },
    {
     id: "la-ilaha",
     name: "লা ইলাহা ইল্লাল্লাহ",
     arabic: "لَا إِلَٰهَ إِلَّا ٱللَّٰهُ",
     bangla: "আল্লাহ ছাড়া কোনো ইলাহ নেই",
-    cycle: 33,
+    cycle: 100,
   },
    {
     id: "astaghfirullah",
@@ -52,21 +52,21 @@ const DHIKR_MODES: DhikrMode[] = [
     name: "আল্লাহুম্মা সাল্লি আলা মুহাম্মাদ",
     arabic: "اللَّهُمَّ صَلِّ عَلَىٰ مُحَمَّدٍ",
     bangla: "হে আল্লাহ! আপনি মুহাম্মদ (সা.)-এর ওপর রহমত বর্ষণ করুন",
-    cycle: 33,
+    cycle: 100,
   },
   {
     id: "hawla",
     name: "লা হাওলা ওয়া লা কুওয়াতা ইল্লা বিল্লাহ",
     arabic: "لَا حَوْلَ وَلَا قُوَّةَ إِلَّا بِاللَّهِ",
     bangla: "আল্লাহর সাহায্য ছাড়া কোনো শক্তি নেই",
-    cycle: 33,
+    cycle: 100,
   },
   {
     id: "subhanallahi",
     name: "সুবহানাল্লাহি ওয়া বিহামদিহি",
     arabic: "سُبْحَانَ اللَّهِ وَبِحَمْدِهِ",
     bangla: "আল্লাহ পবিত্র এবং সমস্ত প্রশংসা তাঁর",
-    cycle: 33,
+    cycle: 100,
   },
 ];
 
@@ -90,11 +90,6 @@ export default function Home() {
   const [bestStreak, setBestStreak] = useState(0);
   const [currentModeId, setCurrentModeId] = useState("salawat");
 
-  // Settings
-  const [soundEnabled, setSoundEnabled] = useState(true);
-  const [hapticEnabled, setHapticEnabled] = useState(true);
-
-  const audioRef = useRef<HTMLAudioElement | null>(null);
   const currentMode = DHIKR_MODES.find((m) => m.id === currentModeId) || DHIKR_MODES[0];
 
   const todayCount = todayCounts[currentModeId] || 0;
@@ -110,8 +105,6 @@ export default function Home() {
     const savedStreak = Number(localStorage.getItem("dhikr-streak") || 0);
     const savedBestStreak = Number(localStorage.getItem("dhikr-best-streak") || 0);
     const savedMode = localStorage.getItem("dhikr-mode") || "salawat";
-    const savedSound = localStorage.getItem("dhikr-sound") !== "false";
-    const savedHaptic = localStorage.getItem("dhikr-haptic") !== "false";
     const lastDate = localStorage.getItem("dhikr-date");
 
     const today = new Date().toDateString();
@@ -163,8 +156,6 @@ export default function Home() {
     setTotalCount(savedTotal);
     setBestStreak(savedBestStreak);
     setCurrentModeId(savedMode);
-    setSoundEnabled(savedSound);
-    setHapticEnabled(savedHaptic);
   }, []);
 
   // ========== DOTS ==========
@@ -179,72 +170,10 @@ export default function Home() {
     });
   }, []);
 
-  // ========== FEEDBACK ==========
-  const playFeedback = useCallback(() => {
-    if (hapticEnabled && typeof navigator !== "undefined" && navigator.vibrate) {
-      navigator.vibrate(15);
-    }
-    if (soundEnabled && audioRef.current) {
-      audioRef.current.currentTime = 0;
-      audioRef.current.play().catch(() => {});
-    }
-  }, [hapticEnabled, soundEnabled]);
 
-  // ========== CLICK HANDLER ==========
-  // const handlePageClick = useCallback(() => {
-  //   if (isCompleting) return;
-  //   playFeedback();
-
-  //   setCount((prev) => {
-  //     const next = prev + 1;
-
-  //     // Update today's count for current mode
-  //     setTodayCounts((prevCounts) => {
-  //       const newToday = (prevCounts[currentModeId] || 0) + 1;
-  //       const updated = { ...prevCounts, [currentModeId]: newToday };
-  //       localStorage.setItem("dhikr-today-counts", JSON.stringify(updated));
-
-  //       // Personal best for this mode
-  //       setPersonalBests((prevBests) => {
-  //         if (newToday > (prevBests[currentModeId] || 0)) {
-  //           const updatedBests = { ...prevBests, [currentModeId]: newToday };
-  //           localStorage.setItem("dhikr-bests", JSON.stringify(updatedBests));
-  //           return updatedBests;
-  //         }
-  //         return prevBests;
-  //       });
-
-  //       return updated;
-  //     });
-
-  //     // Total count
-  //     setTotalCount((t) => {
-  //       const newTotal = t + 1;
-  //       localStorage.setItem("dhikr-total", String(newTotal));
-  //       return newTotal;
-  //     });
-
-  //     // Circle always resets at 33
-  //     if (next >= totalDots) {
-  //       if (currentMode.cycle > 0) {
-  //         setIsCompleting(true);
-  //         setTimeout(() => {
-  //           setIsCompleting(false);
-  //           setCount(0);
-  //         }, 1500);
-  //         return totalDots;
-  //       }
-  //       return 0;
-  //     }
-
-  //     return next;
-  //   });
-  // }, [currentMode, currentModeId, isCompleting, playFeedback]);
-
+  
   const handlePageClick = useCallback(() => {
   if (isCompleting) return;
-
-  playFeedback();
 
   setCount((prev) => {
     const next = prev + 1;
@@ -289,7 +218,8 @@ export default function Home() {
     localStorage.setItem("dhikr-total", String(newTotal));
     return newTotal;
   });
-}, [currentMode, currentModeId, isCompleting, playFeedback]);
+// }, [currentMode, currentModeId, isCompleting, playFeedback]);
+}, [currentMode, currentModeId, isCompleting]);
 
 
   // ========== HELPERS ==========
@@ -317,10 +247,7 @@ export default function Home() {
       onClick={handlePageClick}
       className="relative min-h-screen cursor-pointer overflow-x-hidden bg-[#f3f1e9] text-[#304744] select-none"
     >
-      <audio ref={audioRef} preload="auto">
-        <source src="/tick.mp3" type="audio/mpeg" />
-      </audio>
-
+    
       {/* Background Glow */}
       <div className="pointer-events-none fixed inset-0">
         <div className="absolute -top-20 left-1/2 h-75 w-75 -translate-x-1/2 rounded-full bg-[#d9caa2]/20 blur-[100px] sm:h-100 sm:w-100" />
@@ -406,13 +333,13 @@ export default function Home() {
                   {count}
                 </motion.span>
               </AnimatePresence>
-              <span className="text-[10px] text-[#4e5e5b] sm:text-xs">/ ৩৩</span>
+              <span className="text-[10px] text-[#4e5e5b] sm:text-xs">/ 33</span>
             </motion.div>
           </div>
         </section>
 
         {/* Daily Progress - Per Dhikr */}
-        <div className="mt-4 w-full max-w-xs px-1 sm:mt-5">
+        <div className="mt-7 w-full max-w-xs px-1 sm:mt-4">
           <div className="mb-1 flex items-center justify-between text-[11px] text-[#536662] sm:text-xs">
             <span className="truncate">আজকের টার্গেট ({currentMode.name})</span>
             <span className={`ml-2 shrink-0 ${isGoalReached ? "font-medium text-[#23816b]" : ""}`}>
@@ -435,16 +362,17 @@ export default function Home() {
         </div>
 
         <p className="mt-3 text-xs text-[#4e5e5b] sm:mt-4 sm:text-sm">
-          ট্যাপ করে জিকির করুন
+         ক্লিক করুন জিকির করুন
         </p>
 
         {/* Stats */}
-        <div className="mt-auto flex w-full flex-wrap justify-center gap-1.5 pt-6 sm:gap-2 sm:pt-8">
-          <StatBadge label="স্ট্রিক" value={`${streak} দিন`} />
+        <div className="flex w-full flex-wrap justify-center gap-1.5 sm:gap-2 mt-20 md:mt-auto">
+            <StatBadge label="স্ট্রিক" value={`${streak} দিন`} />
           <StatBadge label="সেরা স্ট্রিক" value={`${bestStreak} দিন`} />
           <StatBadge label="আজকের সেরা" value={personalBest} />
           <StatBadge label="মোট" value={totalCount.toLocaleString()} />
         </div>
+        
       </div>
 
       {/* Completion Overlay */}
@@ -561,22 +489,24 @@ export default function Home() {
               </div>
 
               <div className="space-y-3">
-                <Toggle
+                {/* <Toggle
                   label="সাউন্ড"
                   enabled={soundEnabled}
                   onChange={(v) => {
                     setSoundEnabled(v);
                     localStorage.setItem("dhikr-sound", String(v));
                   }}
-                />
-                <Toggle
+                /> */}
+
+                {/* <Toggle
                   label="ভাইব্রেশন"
                   enabled={hapticEnabled}
                   onChange={(v) => {
                     setHapticEnabled(v);
                     localStorage.setItem("dhikr-haptic", String(v));
                   }}
-                />
+                /> */}
+
               </div>
 
               <button
