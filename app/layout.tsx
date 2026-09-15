@@ -8,8 +8,8 @@ const notoSansBengali = Noto_Sans_Bengali({
 });
 
 export const metadata: Metadata = {
-  title: "Prayer Interface",
-  description: "Prayer Time Interface",
+  title: "Daily Dhikir",
+  description: "Daily Dhikir",
 };
 
 export default function RootLayout({
